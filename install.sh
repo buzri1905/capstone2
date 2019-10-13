@@ -3,7 +3,7 @@
 ACSDIR=/etc/acs/
 
 if [ "$(id -u)" -ne 0 ]; then
-	echo 'Please run as root or using sudo.'
+	echo 'Please run as root or using sudo.' >&2
 	exit 1
 fi
 
@@ -18,9 +18,26 @@ if [ -d $ACSDIR ]; then
 		case $yn in
 			[Yy]* ) rm -r $ACSDIR; break;;
 			[Nn]* ) exit 0;;
-			* ) echo "please answer yes or no.";;
+			* ) echo "please answer yes or no." >&2 ;;
 		esac
 	done
 fi
+
 mkdir $ACSDIR
-echo "we are here"
+moveFiles="insert"
+for file in $moveFiles; do
+	if [ ! -f $flie ]; then
+		echo "Error : $file does not exists." >&2
+		rm -r $ACSDIR
+		exit 1
+	fi
+	chmod +x $file
+	cp $file /usr/local/bin/ACS$file
+done
+
+cd $ACSDIR
+sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,PRICE REAL);"
+sqlite3 -batch vminfo.db "CREATE TABLE FS (PATH PRIMARY KEY, NAME TEXT, FOREIGN KEY(NAME) REFERENCES VM(NAME));"
+
+echo "Install complete!" >&2
+exit 0

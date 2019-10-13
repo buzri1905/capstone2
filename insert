@@ -1,0 +1,32 @@
+#!/bin/bash
+
+ACSDIR=/etc/acs/
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo 'Please run as root or using sudo.'&>2
+	exit 1
+fi
+
+if [ -d $ACSDIR ]; then
+	echo "ACS is not installed. Please execute install.sh first"&>2
+	exit 1
+fi
+
+if [ "$#" -ne 2 ]; then
+	echo "Please check the parameters." &>2
+	exit 1
+fi
+
+if [ ! 	virsh list --all|sed 1,2d |grep -w -q $1 ]; then
+	echo "There is no such name." &>2
+	exit 1
+fi
+
+cd $ACSDIR
+
+if [ sqlite3 -batch vminfo.db "SELECT * FROM VM WHERE NAME='$1';"|wc -l ]; then
+	sqlite3 -batch vminfo.db "DELETE FROM VM WHERE NAME='$1';"
+fi
+
+sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','RUN',0);"
+exit 0
