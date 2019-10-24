@@ -22,11 +22,21 @@ if [ ! 	virsh list --all|sed 1,2d |grep -w -q $1 ]; then
 	exit 1
 fi
 
+if [[ ! $2 =~ ^[+-]?[0-9]+\.?[0-9]*$ ]];then
+	echo "Please check the parameters. The price is not float value." &>2
+	exit 1
+fi
+
 cd $ACSDIR
 
 if [ sqlite3 -batch vminfo.db "SELECT * FROM VM WHERE NAME='$1';"|wc -l ]; then
 	sqlite3 -batch vminfo.db "DELETE FROM VM WHERE NAME='$1';"
 fi
 
-sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','RUN',0);"
+if [ sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','READY_SPOT',$2);" ];then
+	echo "Error in saving DB." $&>2
+	exit 1
+fi
+#Real execution.
+
 exit 0

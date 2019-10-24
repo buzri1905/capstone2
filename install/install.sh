@@ -25,6 +25,7 @@ fi
 
 mkdir $ACSDIR
 moveFiles="insert"
+#Movefiles should be changed
 for file in $moveFiles; do
 	if [ ! -f $flie ]; then
 		echo "Error : $file does not exists." >&2

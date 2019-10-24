@@ -1,0 +1,11 @@
+In VM DB there are 7 status.
+READY_SPOT
+READY_ONDEMAND
+RUN_SPOT
+RUN_ONDEMAND
+FINISH
+
+What have to make
+Daeman
+initialize
+
