@@ -1,0 +1,123 @@
+#!/bin/bash
+
+PM=main
+
+function initOnDemand(){
+	if [ sqlite3 -batch vminfo.db "SELECT * FROM VM WHERE NAME='$1';"|wc -l ]; then
+		sqlite3 -batch vminfo.db "DELETE FROM VM WHERE NAME='$1';"
+	fi
+
+	if [ sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','READY_ONDEMAND',0);" ];then
+		echo "Error in saving DB." &>2
+		return 1
+	fi
+	changeStatus $1 "RUN_ONDEMAND"
+	return $_
+}
+
+function initSpot(){
+	if [ sqlite3 -batch vminfo.db "SELECT * FROM VM WHERE NAME='$1';"|wc -l ]; then
+		sqlite3 -batch vminfo.db "DELETE FROM VM WHERE NAME='$1';"
+	fi
+
+	if [ sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','READY_SPOT',$2);" ];then
+		echo "Error in saving DB." $&>2
+		return 0
+	fi
+	changeStatus $1 "RUN_SPOT"
+	return $_
+}
+
+function changeStatus(){
+	local prevStatus = $(sqlite3 -batch vminfo.db "SELECT STATUS WHERE NAME = $1 ;")
+	local curTime = $(data +%s3N)
+	case $prevStatus in
+		"RUN_SPOT")
+			local prevTime = $(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME WHERE NAME = $1 ;")
+			local price = $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = 'SPOT';")
+			if [ sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*price"|bc -l) WHERE NAME =$1 ;" ]; then
+				echo "Error in saving DB." &>2
+				return 1
+			fi
+			;;
+		"RUN_ONDEMAND")
+			local prevTime = $(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME WHERE NAME = $1 ;")
+			local price = $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = 'ONDEMAND';")
+			if [ sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*price"|bc -l) WHERE NAME =$1 ;" ]; then
+				echo "Error in saving DB." &>2
+				return 1
+			fi
+			;;
+	esac
+	if [ sqlite3 -batch vminfo.db "UPDATE VM SET STATUS = $2 , TURN_ON_TIME = $curTime WHERE NAME = $1 ;" ]; then
+		echo "Error in saving DB." &>2
+		return 1
+	fi
+	return 0
+}
+
+function changePrice(){
+	if [[ ! $2 =~ ^[+-]?[0-9]+\.?[0-9]*$ ]];then
+		echo "Please check the parameters. The price is not float value." &>2
+		return 1
+	fi
+
+	if [ sqlite3 -batch vminfo.db "UPDATE VM SET SPOT_PRICE = $2 WHERE NAME = $1;" ]; then
+		echo "Error in saving DB." &>2
+		return 1
+	fi
+	return 0
+}
+
+function getCurrentPrice(){
+	if [[ ! $1 =~ ^(SPOT|ONDEMAND)$ ]]; then
+		echo "Please check the parameters. There is no $1 mode." &>2
+		return 1
+	fi
+	echo $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = $1 ;")
+	return 0
+}
+
+function changeCurrentPrice(){
+	if [[ ! $2 =~ ^[+-]?[0-9]+\.?[0-9]*$ ]];then
+		echo "Please check the parameters. The price is not float value." &>2
+		return 1
+	fi
+	if [[ ! $1 =~ ^(SPOT|ONDEMAND)$ ]]; then
+		echo "Please check the parameters. There is no $1 mode." &>2
+		return 1
+	fi
+	if [ sqlite3 -batch vminfo.db "UPDATE GB SET PRICE = $2 WHERE MODE = $1;" ]; then
+		echo "Error in saving DB." &>2
+		return 1
+	fi
+	return 0
+}
+
+
+ACSDIR=/etc/acs/
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo 'Please run as root or using sudo.'&>2
+	exit 1
+fi
+
+if [ -d $ACSDIR ]; then
+	echo "ACS is not installed. Please execute install.sh first"&>2
+	exit 1
+fi
+
+#if [ "$#" -ne 2 ]; then
+#	echo "Please check the parameters." &>2
+#	exit 1
+#fi
+
+if [ ! 	virsh list --all|sed 1,2d |grep -w -q $2 ]; then
+	echo "There is no such name." &>2
+	exit 1
+fi
+
+cd $ACSDIR
+
+
+exit 0

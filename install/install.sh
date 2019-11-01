@@ -37,7 +37,10 @@ for file in $moveFiles; do
 done
 
 cd $ACSDIR
-sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,PRICE REAL);"
+sqlite3 -batch vminfo.db "CREATE TABLE GB (MODE TEXT PRIMARY KEY,PRICE REAL);"
+sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('SPOT',0);"
+sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('ONDEMAND',0);"
+sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,TURN_ON_TIME INTEGER,SPOT_PRICE REAL,BILL REAL);"
 sqlite3 -batch vminfo.db "CREATE TABLE FS (PATH PRIMARY KEY, NAME TEXT, FOREIGN KEY(NAME) REFERENCES VM(NAME));"
 
 echo "Install complete!" >&2
