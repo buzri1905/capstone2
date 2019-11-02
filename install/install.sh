@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ACSDIR=/etc/acs/
+SNAPSHOTDIR=$ACSDIR/snapshot
 
 if [ "$(id -u)" -ne 0 ]; then
 	echo 'Please run as root or using sudo.' >&2
@@ -23,7 +24,7 @@ if [ -d $ACSDIR ]; then
 	done
 fi
 
-mkdir $ACSDIR
+mkdir -p $SNAPSHOTDIR
 moveFiles="insert"
 #Movefiles should be changed
 for file in $moveFiles; do
@@ -40,8 +41,8 @@ cd $ACSDIR
 sqlite3 -batch vminfo.db "CREATE TABLE GB (MODE TEXT PRIMARY KEY,PRICE REAL);"
 sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('SPOT',0);"
 sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('ONDEMAND',0);"
-sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,TURN_ON_TIME INTEGER,SPOT_PRICE REAL,BILL REAL);"
-sqlite3 -batch vminfo.db "CREATE TABLE FS (PATH PRIMARY KEY, NAME TEXT, FOREIGN KEY(NAME) REFERENCES VM(NAME));"
+sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,SAVE_INTERVAL INTEGER,TURN_ON_TIME INTEGER,SPOT_PRICE REAL,BILL REAL);"
+sqlite3 -batch vminfo.db "CREATE TABLE FS (NAME PRIMARY KEY, PATH TEXT, FOREIGN KEY(NAME) REFERENCES VM(NAME));"
 
 echo "Install complete!" >&2
 exit 0
