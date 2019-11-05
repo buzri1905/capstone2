@@ -25,7 +25,7 @@ if [ -d $ACSDIR ]; then
 fi
 
 mkdir -p $SNAPSHOTDIR
-moveFiles="insert"
+moveFiles="control"
 #Movefiles should be changed
 for file in $moveFiles; do
 	if [ ! -f $flie ]; then
