@@ -1,12 +1,11 @@
 #!/bin/bash
 
-ACSDIR=/etc/acs/
-SNAPSHOTDIR=$ACSDIR/snapshot
+ACSDIR=~/acs/
 
-if [ "$(id -u)" -ne 0 ]; then
-	echo 'Please run as root or using sudo.' >&2
-	exit 1
-fi
+#if [ "$(id -u)" -ne 0 ]; then
+#	echo 'Please run as root or using sudo.' >&2
+#	exit 1
+#fi
 
 if ! [ -x "$(command -v sqlite3)" ]; then
 	echo 'Error : sqlite3 is not installed.' >&2
@@ -24,7 +23,7 @@ if [ -d $ACSDIR ]; then
 	done
 fi
 
-mkdir -p $SNAPSHOTDIR
+mkdir -p $ACSDIR
 moveFiles="control"
 #Movefiles should be changed
 for file in $moveFiles; do
@@ -34,15 +33,14 @@ for file in $moveFiles; do
 		exit 1
 	fi
 	chmod +x $file
-	cp $file /usr/local/bin/ACS$file
+#cp $file /usr/local/bin/ACS$file
 done
 
 cd $ACSDIR
 sqlite3 -batch vminfo.db "CREATE TABLE GB (MODE TEXT PRIMARY KEY,PRICE REAL);"
 sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('SPOT',0);"
 sqlite3 -batch vminfo.db "INSERT INTO GB VALUES ('ONDEMAND',0);"
-sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,SAVE_INTERVAL INTEGER,TURN_ON_TIME INTEGER,SPOT_PRICE REAL,BILL REAL);"
-sqlite3 -batch vminfo.db "CREATE TABLE FS (NAME PRIMARY KEY, PATH TEXT, FOREIGN KEY(NAME) REFERENCES VM(NAME));"
+sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,SAVE_INTERVAL INTEGER,TURN_ON_TIME INTEGER,SPOT_PRICE REAL,BILL REAL,START_NAME TEXT,PREV_STATE TEXT);"
 
 echo "Install complete!" >&2
 exit 0
