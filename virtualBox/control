@@ -75,7 +75,6 @@ function initOnDemand(){
 
 #complite
 function initSpot(){
-	echo "in initspot $1 $2"
 	if [ ! -z $(sqlite3 -batch vminfo.db "SELECT * FROM VM WHERE NAME='$1';") ] ; then
 		sqlite3 -batch vminfo.db "DELETE FROM VM WHERE NAME='$1';"
 	fi
@@ -96,33 +95,35 @@ function initSpot(){
 function changeStatus(){
 	local prevStatus=$(sqlite3 -batch vminfo.db "SELECT STATUS FROM VM WHERE NAME = '$1' ;")
 	local curTime=$(date +%s%3N)
+	prevStatus=$(sqlite3 -batch vminfo.db "SELECT STATUS FROM VM WHERE NAME = 'cBieL' ;")
 	case $prevStatus in
 		"RUN_SPOT_NO_SAVE")
-			local prevTime = $(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME WHERE NAME = '$1' ;")
-			local price = $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = 'SPOT';")
-			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*price"|bc -l) WHERE NAME = '$1' ;" ; then
+			local prevTime=$(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME FROM VM WHERE NAME = '$1' ;")
+			local price=$(sqlite3 -batch vminfo.db "SELECT PRICE FROM GB WHERE MODE = 'SPOT';")
+			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*$price*0.001"|bc -l) WHERE NAME = '$1' ;" ; then
 				echo "Error in saving DB." >&2
 				return 1
 			fi
 			;;
 		"RUN_SPOT")
-			local prevTime = $(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME WHERE NAME = $1 ;")
-			local price = $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = 'SPOT';")
-			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*price"|bc -l) WHERE NAME = '$1' ;" ; then
+			local prevTime=$(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME FROM VM WHERE NAME='cBieL' ;")
+			local price=$(sqlite3 -batch vminfo.db "SELECT PRICE FROM GB WHERE MODE='SPOT';")
+			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*$price*0.001"|bc -l) WHERE NAME = '$1' ;" ; then
 				echo "Error in saving DB." >&2
 				return 1
 			fi
 			;;
 		"RUN_ONDEMAND")
-			local prevTime = $(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME WHERE NAME = $1 ;")
-			local price = $(sqlite3 -batch vminfo.db "SELECT PRICE WHERE MODE = 'ONDEMAND';")
-			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*price"|bc -l) WHERE NAME = '$1' ;" ; then
+			local prevTime=$(sqlite3 -batch vminfo.db "SELECT TURN_ON_TIME FROM VM WHERE NAME='cBieL' ;")
+			local price=$(sqlite3 -batch vminfo.db "SELECT PRICE FROM GB WHERE MODE='ONDEMAND';")
+			echo "Price is $price and the bill should be $(echo "($curTime-$prevTime)*$price"|bc -l)"
+			if ! sqlite3 -batch vminfo.db "UPDATE VM SET BILL = BILL + $(echo "($curTime-$prevTime)*$price*0.001"|bc -l) WHERE NAME = 'cBieL' ;" ; then
 				echo "Error in saving DB." >&2
 				return 1
 			fi
 			;;
 	esac
-	if ! sqlite3 -batch vminfo.db "UPDATE VM SET STATUS = '$2' , TURN_ON_TIME = $curTime WHERE NAME = '$1' ;" ; then
+	if ! sqlite3 -batch vminfo.db "UPDATE VM SET STATUS = '$2' , TURN_ON_TIME = $curTime WHERE NAME = 'cBieL' ;" ; then
 		echo "Error in saving DB." >&2
 		return 1
 	fi
