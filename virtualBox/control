@@ -29,7 +29,7 @@ function loadSnapshot(){
 		return 1
 	fi
 	sqlite3 -batch vminfo.db "UPDATE VM SET ATOMNUM = $prevAtom WHERE NAME = '$1';";
-	VBoxManage clonevm $prevStatus --name $randString && VBoxManage startvm $randString --type headless
+	VBoxManage clonevm $prevStatus --name $randString --register && VBoxManage startvm $randString --type headless
 	return 0
 }
 

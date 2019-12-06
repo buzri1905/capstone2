@@ -24,17 +24,17 @@ if [ -d $ACSDIR ]; then
 fi
 
 mkdir -p $ACSDIR
-moveFiles="control"
+#moveFiles="control"
 #Movefiles should be changed
-for file in $moveFiles; do
-	if [ ! -f $flie ]; then
-		echo "Error : $file does not exists." >&2
-		rm -r $ACSDIR
-		exit 1
-	fi
-	chmod +x $file
+#for file in $moveFiles; do
+#	if [ ! -f $flie ]; then
+#		echo "Error : $file does not exists." >&2
+#		rm -r $ACSDIR
+#		exit 1
+#	fi
+#	chmod +x $file
 #cp $file /usr/local/bin/ACS$file
-done
+#done
 
 cd $ACSDIR
 sqlite3 -batch vminfo.db "CREATE TABLE VM (NAME TEXT PRIMARY KEY,STATUS TEXT,ATOMNUM INTEGER,DEMANDNUM INTEGER,PREVATOMNUM INTEGER,SAVEDATA TEXT,CURDATA TEXT);"
