@@ -42,7 +42,7 @@ function initSpot(){
 		echo "Error in save state" >&2
 	fi
 	snapshotName=$(getUnusedName)
-	if ! VBoxManage clonevm $1 --name $snapshotName ; then
+	if ! VBoxManage clonevm $1 --name $snapshotName --register ; then
 		echo "Error in clone vm" >&2
 	fi
 	if ! sqlite3 -batch vminfo.db "INSERT INTO VM VALUES ('$1','RUNNING',0,0,0,'$snapshotName','');" ;then
